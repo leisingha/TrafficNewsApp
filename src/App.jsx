@@ -27,22 +27,9 @@ import {
 import { services } from "./business/ServiceFactory";
 import IncidentRepository from "./data/repositories/IncidentRepository";
 import { seedData } from "./data/mockData";
+import IncidentList from "./presentation/pages/IncidentList";
 
 // Placeholder components for future implementation
-const IncidentList = ({ incidents }) => (
-  <Box sx={{ mt: 2 }}>
-    <Typography variant="h6">Incident List ({incidents.length})</Typography>
-    {/* List implementation will go here */}
-    <pre>
-      {JSON.stringify(
-        incidents.map((i) => ({ id: i.id, type: i.type, desc: i.description })),
-        null,
-        2
-      )}
-    </pre>
-  </Box>
-);
-
 const MapContainer = ({ incidents }) => (
   <Box
     sx={{
@@ -101,7 +88,19 @@ function App() {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   // Services
-  const { incidentService, notificationService, refreshScheduler } = services;
+  const { incidentService, refreshScheduler } = services;
+
+  // Core Methods (Controller Logic)
+
+  const refreshIncidents = useCallback(async () => {
+    try {
+      const data = await incidentService.getAll();
+      setIncidents([...data]); // Create new reference to trigger update
+    } catch (error) {
+      console.error(error);
+      displayError("Failed to refresh incidents");
+    }
+  }, [incidentService]);
 
   // Initial Data Load & Setup
   useEffect(() => {
@@ -130,18 +129,7 @@ function App() {
     });
 
     return () => refreshScheduler.stop();
-  }, []);
-
-  // Core Methods (Controller Logic)
-
-  const refreshIncidents = async () => {
-    try {
-      const data = await incidentService.getAll();
-      setIncidents([...data]); // Create new reference to trigger update
-    } catch (error) {
-      displayError("Failed to refresh incidents");
-    }
-  };
+  }, [incidentService, refreshScheduler, refreshIncidents]);
 
   const displayIncidents = () => {
     if (loading) return <CircularProgress sx={{ mt: 4 }} />;
@@ -161,6 +149,7 @@ function App() {
 
   const handleReportSubmit = async (incidentData) => {
     try {
+      console.log("Reporting incident:", incidentData);
       // In a real scenario, we'd construct a full Incident object here
       // For now, we just mock the submission
       // await incidentService.create(incidentData);
