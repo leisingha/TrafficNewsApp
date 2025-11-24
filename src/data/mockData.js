@@ -4,76 +4,56 @@
  */
 
 export const MOCK_INCIDENTS = [
-  {
-    id: "1",
-    type: "ACCIDENT",
-    severity: "HIGH",
-    location: {
-      latitude: 40.7128,
-      longitude: -74.006,
-      address: "New York, NY",
+    {
+        id: '1',
+        type: 'ACCIDENT',
+        severity: 'HIGH',
+        location: { latitude: 43.6532, longitude: -79.3832, address: 'Yonge & Dundas, Toronto' },
+        description: 'Multi-car collision at intersection',
+        timestamp: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
+        status: 'APPROVED',
+        reporterId: 'user1'
     },
-    description: "Multi-car collision on 5th Ave",
-    timestamp: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
-    status: "APPROVED",
-    reporterId: "user1",
-  },
-  {
-    id: "2",
-    type: "CONSTRUCTION",
-    severity: "MEDIUM",
-    location: {
-      latitude: 40.73061,
-      longitude: -73.935242,
-      address: "Long Island City, NY",
+    {
+        id: '2',
+        type: 'CONSTRUCTION',
+        severity: 'MEDIUM',
+        location: { latitude: 43.6426, longitude: -79.3871, address: 'Gardiner Expressway, Toronto' },
+        description: 'Road work on Gardiner Westbound',
+        timestamp: new Date(Date.now() - 7200000).toISOString(), // 2 hours ago
+        status: 'APPROVED',
+        reporterId: 'user2'
     },
-    description: "Road work on Queens Blvd",
-    timestamp: new Date(Date.now() - 7200000).toISOString(), // 2 hours ago
-    status: "APPROVED",
-    reporterId: "user2",
-  },
-  {
-    id: "3",
-    type: "TRAFFIC_JAM",
-    severity: "LOW",
-    location: {
-      latitude: 40.6782,
-      longitude: -73.9442,
-      address: "Brooklyn, NY",
+    {
+        id: '3',
+        type: 'TRAFFIC_JAM',
+        severity: 'LOW',
+        location: { latitude: 43.6677, longitude: -79.3948, address: 'Bloor St W, Toronto' },
+        description: 'Heavy traffic near UofT',
+        timestamp: new Date(Date.now() - 1800000).toISOString(), // 30 mins ago
+        status: 'PENDING',
+        reporterId: 'user3'
     },
-    description: "Heavy traffic due to event",
-    timestamp: new Date(Date.now() - 1800000).toISOString(), // 30 mins ago
-    status: "PENDING",
-    reporterId: "user3",
-  },
-  {
-    id: "4",
-    type: "HAZARD",
-    severity: "HIGH",
-    location: {
-      latitude: 40.7589,
-      longitude: -73.9851,
-      address: "Times Square, NY",
+    {
+        id: '4',
+        type: 'HAZARD',
+        severity: 'HIGH',
+        location: { latitude: 43.6481, longitude: -79.3756, address: 'Yonge & Front, Toronto' },
+        description: 'Debris on road near Union Station',
+        timestamp: new Date(Date.now() - 900000).toISOString(), // 15 mins ago
+        status: 'APPROVED',
+        reporterId: 'user4'
     },
-    description: "Debris on road",
-    timestamp: new Date(Date.now() - 900000).toISOString(), // 15 mins ago
-    status: "APPROVED",
-    reporterId: "user4",
-  },
-  {
-    id: "5",
-    type: "ACCIDENT",
-    severity: "LOW",
-    location: {
-      latitude: 40.7829,
-      longitude: -73.9654,
-      address: "Central Park, NY",
-    },
-    description: "Minor fender bender",
-    timestamp: new Date(Date.now() - 43200000).toISOString(), // 12 hours ago
-    status: "APPROVED",
-    reporterId: "user1",
-  },
+    {
+        id: '5',
+        type: 'ACCIDENT',
+        severity: 'LOW',
+        location: { latitude: 43.651070, longitude: -79.347015, address: 'Don Valley Parkway, Toronto' },
+        description: 'Minor fender bender on DVP',
+        timestamp: new Date(Date.now() - 43200000).toISOString(), // 12 hours ago
+        status: 'APPROVED',
+        reporterId: 'user1'
+    }
 ];
 
 /**

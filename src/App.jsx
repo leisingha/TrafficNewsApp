@@ -28,23 +28,7 @@ import { services } from "./business/ServiceFactory";
 import IncidentRepository from "./data/repositories/IncidentRepository";
 import { seedData } from "./data/mockData";
 import IncidentList from "./presentation/pages/IncidentList";
-
-// Placeholder components for future implementation
-const MapContainer = ({ incidents }) => (
-  <Box
-    sx={{
-      mt: 2,
-      height: "400px",
-      bgcolor: "#e0e0e0",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-    }}
-  >
-    <Typography variant="h6">Map View ({incidents.length} pins)</Typography>
-    {/* Map implementation will go here */}
-  </Box>
-);
+import MapContainer from "./presentation/components/MapContainer";
 
 const ReportForm = ({ open, onClose, onSubmit }) => {
   if (!open) return null;
