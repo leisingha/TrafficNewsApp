@@ -29,34 +29,7 @@ import IncidentRepository from "./data/repositories/IncidentRepository";
 import { seedData } from "./data/mockData";
 import IncidentList from "./presentation/pages/IncidentList";
 import MapContainer from "./presentation/components/MapContainer";
-
-const ReportForm = ({ open, onClose, onSubmit }) => {
-  if (!open) return null;
-  return (
-    <Box
-      sx={{
-        position: "fixed",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        bgcolor: "white",
-        p: 4,
-        boxShadow: 24,
-        zIndex: 1300,
-      }}
-    >
-      <Typography variant="h6">Report Incident</Typography>
-      <Button onClick={onClose}>Cancel</Button>
-      <Button
-        onClick={() =>
-          onSubmit({ type: "ACCIDENT", description: "Test Incident" })
-        }
-      >
-        Submit
-      </Button>
-    </Box>
-  );
-};
+import ReportDialog from "./presentation/components/ReportDialog";
 
 function App() {
   // State Management
@@ -72,9 +45,17 @@ function App() {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   // Services
-  const { incidentService, refreshScheduler } = services;
+  const { incidentService, refreshScheduler, notificationService } = services;
 
   // Core Methods (Controller Logic)
+
+  const displayError = useCallback((message) => {
+    setNotification({ open: true, message, severity: "error" });
+  }, []);
+
+  const showNotification = useCallback((message, severity = "info") => {
+    setNotification({ open: true, message, severity });
+  }, []);
 
   const refreshIncidents = useCallback(async () => {
     try {
@@ -84,7 +65,7 @@ function App() {
       console.error(error);
       displayError("Failed to refresh incidents");
     }
-  }, [incidentService]);
+  }, [incidentService, displayError]);
 
   // Initial Data Load & Setup
   useEffect(() => {
@@ -106,14 +87,30 @@ function App() {
 
     init();
 
+    // Setup Notification Handler
+    notificationService.setNotificationHandler((message, type) => {
+      const severity = type ? type.toLowerCase() : "info";
+      showNotification(message, severity);
+    });
+
     // Setup Auto-Refresh
     refreshScheduler.start(async () => {
       console.log("Auto-refreshing incidents...");
       await refreshIncidents();
     });
 
-    return () => refreshScheduler.stop();
-  }, [incidentService, refreshScheduler, refreshIncidents]);
+    return () => {
+      refreshScheduler.stop();
+      notificationService.setNotificationHandler(null);
+    };
+  }, [
+    incidentService,
+    refreshScheduler,
+    notificationService,
+    refreshIncidents,
+    showNotification,
+    displayError,
+  ]);
 
   const displayIncidents = () => {
     if (loading) return <CircularProgress sx={{ mt: 4 }} />;
@@ -131,26 +128,16 @@ function App() {
   const showReportForm = () => setShowReportDialog(true);
   const hideReportForm = () => setShowReportDialog(false);
 
-  const handleReportSubmit = async (incidentData) => {
+  const handleReportSubmit = async (incident) => {
     try {
-      console.log("Reporting incident:", incidentData);
-      // In a real scenario, we'd construct a full Incident object here
-      // For now, we just mock the submission
-      // await incidentService.create(incidentData);
-      showNotification("Incident reported successfully (Mock)", "success");
+      console.log("Reporting incident:", incident);
+      await incidentService.create(incident);
+      showNotification("Incident reported successfully", "success");
       hideReportForm();
       refreshIncidents();
     } catch (error) {
       displayError(error.message);
     }
-  };
-
-  const displayError = (message) => {
-    setNotification({ open: true, message, severity: "error" });
-  };
-
-  const showNotification = (message, severity = "info") => {
-    setNotification({ open: true, message, severity });
   };
 
   const handleNotificationClose = () => {
@@ -243,7 +230,7 @@ function App() {
       </Fab>
 
       {/* Dialogs & Overlays */}
-      <ReportForm
+      <ReportDialog
         open={showReportDialog}
         onClose={hideReportForm}
         onSubmit={handleReportSubmit}

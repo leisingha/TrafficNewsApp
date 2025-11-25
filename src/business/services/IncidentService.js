@@ -18,9 +18,22 @@ export class IncidentService {
   async create(incident) {
     const validation = this.validationService.validateReport(incident);
     if (!validation.isValidResult()) {
-      throw new Error(
-        `Validation failed: ${validation.getErrors().join(", ")}`
-      );
+      const errors = validation.getErrors();
+      const fieldErrors = validation.getFieldErrors();
+
+      let errorMessage = "Validation failed: ";
+      if (errors.length > 0) {
+        errorMessage += errors.join(", ");
+      }
+
+      if (Object.keys(fieldErrors).length > 0) {
+        const fieldErrorMessages = Object.entries(fieldErrors)
+          .map(([field, error]) => `${field}: ${error}`)
+          .join(", ");
+        errorMessage += (errors.length > 0 ? "; " : "") + fieldErrorMessages;
+      }
+
+      throw new Error(errorMessage);
     }
 
     await this.incidentRepository.persist(incident);
