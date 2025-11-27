@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   AppBar,
   Toolbar,
@@ -16,6 +16,14 @@ import {
   ListItem,
   ListItemText,
   Divider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  FormControlLabel,
+  Switch,
+  MenuItem,
 } from "@mui/material";
 import {
   Add as AddIcon,
@@ -30,6 +38,10 @@ import { seedData } from "./data/mockData";
 import IncidentList from "./presentation/pages/IncidentList";
 import MapContainer from "./presentation/components/MapContainer";
 import ReportDialog from "./presentation/components/ReportDialog";
+import { ReportStatus } from "./business/models/Enums";
+import { useAuth } from "./presentation/context/AuthContext.jsx";
+
+const EXTEND_OPTIONS = [6, 12, 24];
 
 function App() {
   // State Management
@@ -43,9 +55,22 @@ function App() {
     severity: "info",
   });
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [includeResolved, setIncludeResolved] = useState(false);
+  const [loginDialogOpen, setLoginDialogOpen] = useState(false);
+  const [passcode, setPasscode] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [incidentToDelete, setIncidentToDelete] = useState(null);
+  const [incidentToExtend, setIncidentToExtend] = useState(null);
+  const [extendHours, setExtendHours] = useState(6);
 
   // Services
-  const { incidentService, refreshScheduler, notificationService } = services;
+  const {
+    incidentService,
+    refreshScheduler,
+    notificationService,
+    incidentLifecycleService,
+  } = services;
+  const { isManager, login, logout } = useAuth();
 
   // Core Methods (Controller Logic)
 
@@ -59,13 +84,14 @@ function App() {
 
   const refreshIncidents = useCallback(async () => {
     try {
+      await incidentLifecycleService.expireStaleIncidents();
       const data = await incidentService.getAll();
       setIncidents([...data]); // Create new reference to trigger update
     } catch (error) {
       console.error(error);
       displayError("Failed to refresh incidents");
     }
-  }, [incidentService, displayError]);
+  }, [incidentService, incidentLifecycleService, displayError]);
 
   // Initial Data Load & Setup
   useEffect(() => {
@@ -112,13 +138,28 @@ function App() {
     displayError,
   ]);
 
+  const filteredIncidents = useMemo(() => {
+    if (includeResolved) {
+      return incidents;
+    }
+    return incidents.filter((incident) => {
+      const status = incident.status || ReportStatus.ACTIVE;
+      return status === ReportStatus.ACTIVE;
+    });
+  }, [incidents, includeResolved]);
+
   const displayIncidents = () => {
     if (loading) return <CircularProgress sx={{ mt: 4 }} />;
 
     return viewMode === "map" ? (
-      <MapContainer incidents={incidents} />
+      <MapContainer incidents={filteredIncidents} />
     ) : (
-      <IncidentList incidents={incidents} />
+      <IncidentList
+        incidents={filteredIncidents}
+        onDeleteRequest={handleDeleteRequest}
+        onExtendRequest={handleExtendRequest}
+        canManage={isManager}
+      />
     );
   };
 
@@ -138,6 +179,76 @@ function App() {
     } catch (error) {
       displayError(error.message);
     }
+  };
+
+  const handleDeleteRequest = (incident) => {
+    setIncidentToDelete(incident);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!incidentToDelete) return;
+    try {
+      await incidentLifecycleService.markResolved(incidentToDelete.id);
+      showNotification("Incident removed from public feed", "success");
+      setIncidentToDelete(null);
+      refreshIncidents();
+    } catch (error) {
+      displayError(error.message || "Failed to remove incident");
+    }
+  };
+
+  const handleDeleteCancel = () => setIncidentToDelete(null);
+
+  const handleExtendRequest = (incident) => {
+    setIncidentToExtend(incident);
+    setExtendHours(6);
+  };
+
+  const handleExtendConfirm = async () => {
+    if (!incidentToExtend) return;
+    try {
+      await incidentLifecycleService.extendIncident(
+        incidentToExtend.id,
+        extendHours
+      );
+      showNotification(
+        `Incident visibility extended by ${extendHours} hours`,
+        "info"
+      );
+      setIncidentToExtend(null);
+      refreshIncidents();
+    } catch (error) {
+      displayError(error.message || "Failed to extend incident");
+    }
+  };
+
+  const handleExtendCancel = () => setIncidentToExtend(null);
+
+  const openLoginDialog = () => {
+    setPasscode("");
+    setLoginError("");
+    setLoginDialogOpen(true);
+  };
+
+  const closeLoginDialog = () => {
+    setLoginDialogOpen(false);
+    setPasscode("");
+    setLoginError("");
+  };
+
+  const handleManagerLogin = () => {
+    const result = login(passcode);
+    if (!result.success) {
+      setLoginError(result.error);
+      return;
+    }
+    closeLoginDialog();
+    showNotification("Manager session activated", "success");
+  };
+
+  const handleManagerLogout = () => {
+    logout();
+    showNotification("Manager session ended", "info");
   };
 
   const handleNotificationClose = () => {
@@ -203,6 +314,22 @@ function App() {
             <ListItem button>
               <ListItemText primary="Saved Routes" />
             </ListItem>
+            <Divider />
+            <ListItem>
+              <ListItemText
+                primary={`Role: ${isManager ? "Manager" : "Viewer"}`}
+                secondary={
+                  isManager
+                    ? "You can clear or extend incidents"
+                    : "Login required for moderation"
+                }
+              />
+            </ListItem>
+            <ListItem button onClick={isManager ? handleManagerLogout : openLoginDialog}>
+              <ListItemText
+                primary={isManager ? "Logout Manager" : "Manager Login"}
+              />
+            </ListItem>
           </List>
         </Box>
       </Drawer>
@@ -214,6 +341,16 @@ function App() {
           <Typography variant="body2" color="textSecondary">
             Search Bar & Filter Controls will go here
           </Typography>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={includeResolved}
+                onChange={(event) => setIncludeResolved(event.target.checked)}
+              />
+            }
+            label="Show cleared incidents"
+            sx={{ mt: 1 }}
+          />
         </Box>
 
         {displayIncidents()}
@@ -235,6 +372,93 @@ function App() {
         onClose={hideReportForm}
         onSubmit={handleReportSubmit}
       />
+
+      {/* Manager Login */}
+      <Dialog open={loginDialogOpen} onClose={closeLoginDialog} maxWidth="xs" fullWidth>
+        <DialogTitle>Manager Login</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Passcode"
+            type="password"
+            fullWidth
+            value={passcode}
+            onChange={(event) => setPasscode(event.target.value)}
+            error={Boolean(loginError)}
+            helperText={loginError || "Enter the shared manager passcode"}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeLoginDialog}>Cancel</Button>
+          <Button onClick={handleManagerLogin} variant="contained">
+            Login
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation */}
+      <Dialog
+        open={Boolean(incidentToDelete)}
+        onClose={handleDeleteCancel}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Clear Incident</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to remove
+            {" "}
+            <strong>{incidentToDelete?.type}</strong>
+            {" "}
+            at {incidentToDelete?.location?.address || "this location"}?
+            This will hide it from all public users.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel}>Cancel</Button>
+          <Button color="error" variant="contained" onClick={handleDeleteConfirm}>
+            Remove
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Extend Dialog */}
+      <Dialog
+        open={Boolean(incidentToExtend)}
+        onClose={handleExtendCancel}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Extend Incident Visibility</DialogTitle>
+        <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <Typography>
+            Choose how long to keep
+            {" "}
+            <strong>{incidentToExtend?.type}</strong>
+            {" "}
+            visible before it expires.
+          </Typography>
+          <TextField
+            select
+            label="Extend by"
+            value={extendHours}
+            onChange={(event) => setExtendHours(Number(event.target.value))}
+          >
+            {EXTEND_OPTIONS.map((hours) => (
+              <MenuItem key={hours} value={hours}>
+                {hours} hours
+              </MenuItem>
+            ))}
+          </TextField>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleExtendCancel}>Cancel</Button>
+          <Button variant="contained" onClick={handleExtendConfirm}>
+            Extend
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Feedback: Notifications */}
       <Snackbar

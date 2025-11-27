@@ -1,5 +1,15 @@
 import React from "react";
-import { Card, CardContent, Typography, Chip, Box, Stack } from "@mui/material";
+import {
+  Card,
+  CardContent,
+  CardActions,
+  Typography,
+  Chip,
+  Box,
+  Stack,
+  Tooltip,
+  IconButton,
+} from "@mui/material";
 import {
   LocationOn,
   AccessTime,
@@ -7,8 +17,14 @@ import {
   Construction,
   Block,
   Info,
+  DeleteOutline,
+  MoreTime,
 } from "@mui/icons-material";
-import { IncidentType, SeverityLevel } from "../../business/models/Enums";
+import {
+  IncidentType,
+  SeverityLevel,
+  ReportStatus,
+} from "../../business/models/Enums";
 
 const getTypeIcon = (type) => {
   switch (type) {
@@ -38,8 +54,19 @@ const getSeverityColor = (severity) => {
   }
 };
 
-const IncidentCard = ({ incident }) => {
-  const { type, severity, description, location, timestamp } = incident;
+const statusColors = {
+  [ReportStatus.RESOLVED]: "success",
+  [ReportStatus.EXPIRED]: "default",
+};
+
+const IncidentCard = ({
+  incident,
+  canManage = false,
+  onDeleteRequest,
+  onExtendRequest,
+}) => {
+  const { type, severity, description, location, timestamp, status, expiresAt } =
+    incident;
 
   // Format date
   const dateStr = new Date(timestamp).toLocaleString();
@@ -71,6 +98,13 @@ const IncidentCard = ({ incident }) => {
             size="small"
             variant="outlined"
           />
+          {status && status !== ReportStatus.ACTIVE && (
+            <Chip
+              label={status}
+              color={statusColors[status] || "default"}
+              size="small"
+            />
+          )}
         </Stack>
 
         <Typography variant="body1" sx={{ mt: 1.5, mb: 1.5 }}>
@@ -103,8 +137,48 @@ const IncidentCard = ({ incident }) => {
             <AccessTime fontSize="small" />
             <Typography variant="body2">{dateStr}</Typography>
           </Box>
+          {expiresAt && (
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                color: "text.secondary",
+              }}
+            >
+              <MoreTime fontSize="small" />
+              <Typography variant="body2">
+                Clears by {new Date(expiresAt).toLocaleString()}
+              </Typography>
+            </Box>
+          )}
         </Stack>
       </CardContent>
+      {canManage && (
+        <CardActions sx={{ justifyContent: "flex-end" }}>
+          <Tooltip title="Extend visibility by 6/12/24h">
+            <span>
+              <IconButton
+                size="small"
+                onClick={() => onExtendRequest && onExtendRequest(incident)}
+              >
+                <MoreTime fontSize="small" />
+              </IconButton>
+            </span>
+          </Tooltip>
+          <Tooltip title="Clear incident">
+            <span>
+              <IconButton
+                size="small"
+                color="error"
+                onClick={() => onDeleteRequest && onDeleteRequest(incident)}
+              >
+                <DeleteOutline fontSize="small" />
+              </IconButton>
+            </span>
+          </Tooltip>
+        </CardActions>
+      )}
     </Card>
   );
 };

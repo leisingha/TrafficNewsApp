@@ -3,6 +3,7 @@ export const IncidentType = {
   CONSTRUCTION: "CONSTRUCTION",
   CLOSURE: "CLOSURE",
   HAZARD: "HAZARD",
+  TRAFFIC_JAM: "TRAFFIC_JAM",
 };
 
 export const SeverityLevel = {
@@ -12,8 +13,11 @@ export const SeverityLevel = {
 };
 
 export const ReportStatus = {
+  ACTIVE: "ACTIVE",
   PENDING: "PENDING",
   APPROVED: "APPROVED",
   REJECTED: "REJECTED",
   NEEDS_CHANGES: "NEEDS_CHANGES",
+  RESOLVED: "RESOLVED",
+  EXPIRED: "EXPIRED",
 };

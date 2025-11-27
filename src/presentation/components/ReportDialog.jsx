@@ -66,7 +66,8 @@ const ReportDialog = ({ open, onClose, onSubmit }) => {
       formData.description,
       "current-user-id", // Mock user ID
       new Date().toISOString(),
-      ReportStatus.PENDING
+      ReportStatus.ACTIVE,
+      null
     );
 
     onSubmit(newIncident);

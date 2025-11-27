@@ -9,7 +9,8 @@ export class Incident {
     description,
     reporterId,
     timestamp = new Date(),
-    status = ReportStatus.PENDING
+    status = ReportStatus.ACTIVE,
+    expiresAt = null
   ) {
     this.id = id;
     this.type = type;
@@ -19,6 +20,7 @@ export class Incident {
     this.reporterId = reporterId;
     this.timestamp = timestamp;
     this.status = status;
+    this.expiresAt = expiresAt;
   }
 
   getId() {
@@ -43,8 +45,16 @@ export class Incident {
     return this.status;
   }
 
+  getExpiresAt() {
+    return this.expiresAt;
+  }
+
   setStatus(status) {
     this.status = status;
+  }
+
+  setExpiresAt(expiresAt) {
+    this.expiresAt = expiresAt;
   }
 
   updateDescription(desc) {

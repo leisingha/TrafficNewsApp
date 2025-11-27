@@ -12,6 +12,7 @@ import { RefreshScheduler } from "./services/RefreshScheduler";
 import { RateLimiterService } from "./services/RateLimiterService";
 import { SavedRoutesService } from "./services/SavedRoutesService";
 import { OfflineSubmissionQueue } from "./services/OfflineSubmissionQueue";
+import { IncidentLifecycleService } from "./services/IncidentLifecycleService";
 
 // Instantiate Services
 const validationService = new ValidationService();
@@ -32,6 +33,10 @@ const savedRoutesService = new SavedRoutesService(
   notificationService
 );
 const offlineSubmissionQueue = new OfflineSubmissionQueue(incidentService);
+const incidentLifecycleService = new IncidentLifecycleService(
+  IncidentRepository,
+  notificationService
+);
 
 export const services = {
   incidentService,
@@ -45,4 +50,5 @@ export const services = {
   savedRoutesService,
   offlineSubmissionQueue,
   mapServiceAPI: MapServiceAPI,
+  incidentLifecycleService,
 };

@@ -15,7 +15,7 @@ export const MOCK_INCIDENTS = [
     },
     description: "Multi-car collision at intersection",
     timestamp: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
-    status: "APPROVED",
+    status: "ACTIVE",
     reporterId: "user1",
   },
   {
@@ -29,7 +29,7 @@ export const MOCK_INCIDENTS = [
     },
     description: "Road work on Gardiner Westbound",
     timestamp: new Date(Date.now() - 7200000).toISOString(), // 2 hours ago
-    status: "APPROVED",
+    status: "ACTIVE",
     reporterId: "user2",
   },
   {
@@ -43,7 +43,7 @@ export const MOCK_INCIDENTS = [
     },
     description: "Heavy traffic near UofT",
     timestamp: new Date(Date.now() - 1800000).toISOString(), // 30 mins ago
-    status: "PENDING",
+    status: "ACTIVE",
     reporterId: "user3",
   },
   {
@@ -57,7 +57,7 @@ export const MOCK_INCIDENTS = [
     },
     description: "Debris on road near Union Station",
     timestamp: new Date(Date.now() - 900000).toISOString(), // 15 mins ago
-    status: "APPROVED",
+    status: "ACTIVE",
     reporterId: "user4",
   },
   {
@@ -71,7 +71,7 @@ export const MOCK_INCIDENTS = [
     },
     description: "Minor fender bender on DVP",
     timestamp: new Date(Date.now() - 43200000).toISOString(), // 12 hours ago
-    status: "APPROVED",
+    status: "ACTIVE",
     reporterId: "user1",
   },
 ];
